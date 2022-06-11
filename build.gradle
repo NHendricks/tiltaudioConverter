@@ -8,7 +8,7 @@ buildscript {
   }
 }
 import static com.xlson.groovycsv.CsvParser.parseCsv
-task readAltSoundCsv {
+task generate {
   doLast {
     def inputDirPath = '_input'
     for(line in parseCsv(new FileReader(inputDirPath + '/altsound.csv'), separator: ',')) {
