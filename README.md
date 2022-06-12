@@ -11,8 +11,8 @@ To convert ogg files to wav run gradew.bat convert
 How it works:
 
 1. generate:
-It just reads the tiltaudio.csv file from altsound.zip in the directory "_input" and copies all altsound files over to the structure tiltaudio needs. In further steps this generator might simply convert the random-number-foldernames of a pinsound-zip into foldernames that tiltaudio will understand.
+It just reads the tiltaudio.csv file from altsound.zip in the directory "_input" and copies all altsound files over to "_output" into the directory structure tiltaudio needs. In further steps this generator might simply convert the random-number-foldernames of a pinsound-zip into foldernames that tiltaudio will understand.
 
 2. convert:
 It uses your installation of ffmpeg and converts (and normalizes) .ogg files to .wav files
-It this has a problem maybe the file name is too ling. Place this tool at c:\tiltaudioConverter or reduce the filename length.
+It this has a problem maybe the file name is too long. Place this tool at c:\tiltaudioConverter or reduce the filename length. The ogg-Files will be deleted so subsequent calls will only retry converting the remaining files.
