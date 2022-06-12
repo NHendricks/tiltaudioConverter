@@ -19,7 +19,7 @@ task generate {
     FileUtils.cleanDirectory(outputDir)
 	def altSoundZip = new File('_input').listFiles().find{it.name.endsWith('.zip')}
 	def altZipTree = zipTree(altSoundZip)
-    for(line in parseCsv(new FileReader(altZipTree.matching { include 'altsound.csv'}.singleFile), separator: ',')) {
+    for(line in parseCsv(new FileReader(altZipTree.matching { include '**/altsound.csv'}.singleFile), separator: ',')) {
         // println "ID=$line.ID, Name=$line.NAME"
 		def type = 'undefined'
 		if (line.DUCK.trim() == '10') {
@@ -39,7 +39,7 @@ task generate {
         println type + '=>' + decimal + "=" + line.NAME
 		def outDir = new File(outputDir, type + '/' + decimal + '-' + line.NAME)
 		outDir.mkdirs()
-		Files.copy(project.file(altZipTree.matching { include line.FNAME}.singleFile).toPath(), new File(outDir, line.FNAME).toPath())
+		Files.copy(project.file(altZipTree.matching { include '**/' + line.FNAME}.singleFile).toPath(), new File(outDir, line.FNAME).toPath())
     }
   }
 }
