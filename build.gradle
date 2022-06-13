@@ -14,7 +14,7 @@ import groovy.io.FileType
 
 def outputDir = project.file('_output')
 
-task generate {
+task generateAltsound2Tiltaudio {
   doLast {
     FileUtils.cleanDirectory(outputDir)
 	def altSoundZip = new File('_input').listFiles().find{it.name.endsWith('.zip')}
@@ -44,6 +44,50 @@ task generate {
   }
 }
 
+def pinSound2TiltaudioEntries = new LinkedHashMap<File, File>()
+task generatePinsound2Tiltaudio {
+  doLast {
+    def pinSoundZip = new File('_input_pinsound').listFiles().find{it.name.endsWith('.zip')}   
+	def altSoundZip = new File('_input').listFiles().find{it.name.endsWith('.zip')}
+	def pinSoundZipTree = zipTree(pinSoundZip)
+ 	def altZipTree = zipTree(altSoundZip)
+    for(line in parseCsv(new FileReader(altZipTree.matching { include '**/altsound.csv'}.singleFile), separator: ',')) {
+      // println "ID=$line.ID, Name=$line.NAME"
+	  def type = 'undefined'
+	  if (line.DUCK.trim() == '10') {
+	    type = 'jingle'
+	  } else if (line.DUCK.trim() == '100') {
+	    type = 'music'
+	  } else if (line.DUCK.trim() == '65') {
+	    type = 'voice'
+	  } else if (line.DUCK.trim() == '80') {
+	    type = 'sfx'
+	  } else {
+	    println 'unknown DUCK value for ' + line.NAME + ':' + line.DUCK
+	  }
+	  def hex = line.ID
+	  def decimal = '' + Integer.parseInt(hex.substring(2), 16)
+	  decimal = decimal.padLeft(10, '0')
+      println type + '=>' + decimal + "=" + line.NAME
+	  def outDir = new File(outputDir, type + '/' + decimal + '-' + line.NAME)
+	  outDir.mkdirs()
+	  pinSoundZipTree.matching { include '**/*'}.each {wavFileFromPinSound ->
+	    if (wavFileFromPinSound.getParentFile().getName().endsWith('-' + line.NAME)) {
+		  pinSound2TiltaudioEntries.put(wavFileFromPinSound.getParentFile(), outDir)
+		}
+	  }
+	  pinSound2TiltaudioEntries.keySet().each { dirOfPinsOund ->
+	    dirOfPinsOund.listFiles().each{fileInPinSoundDir -> 
+		  def destFile = new File(pinSound2TiltaudioEntries.get(dirOfPinsOund), fileInPinSoundDir.name.replaceAll("\\s","_"))
+		  if (!destFile.exists()) {
+		    Files.copy(fileInPinSoundDir.toPath(), destFile.toPath())
+		  }
+		} 
+	  }
+    }
+  }
+}
+
 task convert {
   doLast {
     // for windows currently, change it for linux easily if you want
@@ -56,7 +100,7 @@ task convert {
       if (file.name.endsWith('.ogg')) {
 	    def targetFile = new File(file.getParentFile(), file.name.substring(0,file.name.length()-4) + '.wav')
         println 'converting ' + file.path + ' to ' + targetFile.path
-        def pmdCommand = "_ffmpeg/bin/ffmpeg.exe -i ${file.path} -af volume=5dB ${targetFile.path }"
+        def pmdCommand = '_ffmpeg/bin/ffmpeg.exe -i "' + file.path +'" -af volume=3dB "' + targetFile.path + '"'
         def sout = new StringBuffer()
         def serr = new StringBuffer()
         def process = pmdCommand.execute()
@@ -74,7 +118,6 @@ task convert {
     }
 	if (hadErrors) {
 	  throw new Exception('Some files could not be converted. Try convert again and check output.')
-	}
-	
+	}	
   }
 }
