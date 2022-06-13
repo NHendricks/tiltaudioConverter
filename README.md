@@ -1,12 +1,12 @@
 # tiltaudioConverter
-Converts Altsound-Audio-Packs or Pinsound-Audio-Packs to the ordered folder structure for Tiltaudio to get a unified format and to make changes more easily.
+Converts Altsound-Audio-Packs or Pinsound-Audio-Packs to the ordered folder structure for Tiltaudio to get a unified format so that changes can be applied more easily.
 
 Please install java (or make sure that the environment variable JAVA_HOME is set correctly). Then run gradew.bat tasks.
 The first call will download the gradle runtime into the gradle cache. Subsequent calls will be faster.
 
 To generate from Altsound-zipfile into tiltaudio (ordered) directory structure run "gradlew.bat generateAltsound2Tiltaudio"
 
-To generate pinsound randomized directories into tiltaudio (ordered) directory structure run "gradew.bat generatePinsound2Tiltaudio"
+To generate pinsound randomized directories into tiltaudio (ordered) directory structure run "gradlew.bat generatePinsound2Tiltaudio"
 
 To convert and normalize ogg files to wav run "gradlew.bat convert"
 
