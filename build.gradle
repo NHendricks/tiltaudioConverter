@@ -12,6 +12,7 @@ import org.apache.commons.io.FileUtils
 import static com.xlson.groovycsv.CsvParser.parseCsv
 import groovy.io.FileType
 
+def isWindows = System.getProperty('os.name').contains('Windows')
 def outputDir = project.file('_output')
 
 task generateAltsound2Tiltaudio {
@@ -98,15 +99,23 @@ task convert {
 	doLast {
 		// for windows currently, change it for linux easily if you want
 		def path2ffmeg = '_ffmpeg/bin/ffmpeg.exe'
-		if (!project.file(path2ffmeg).exists()) {
-			throw new Exception('Please put ffmeg into ' + path2ffmeg)
+		if (!isWindows) {
+			path2ffmeg = 'ffmpeg'
+		} else {		
+			if (!project.file(path2ffmeg).exists()) {
+				throw new Exception('Please put ffmeg into ' + path2ffmeg)
+			}
 		}
 		boolean hadErrors = false
 		outputDir.eachFileRecurse (FileType.FILES) { file ->
 			if (file.name.endsWith('.ogg')) {
 			def targetFile = new File(file.getParentFile(), file.name.substring(0,file.name.length()-4) + '.wav')
 			println 'converting ' + file.path + ' to ' + targetFile.path
-			def pmdCommand = '_ffmpeg/bin/ffmpeg.exe -i "' + file.path +'" -af volume=3dB "' + targetFile.path + '"'
+			def pmdCommand = path2ffmeg + ' -i "' + file.path +'" -af volume=3dB "' + targetFile.path + '"'
+			if (!isWindows) {
+				pmdCommand = path2ffmeg + ' -i ' + file.path +' -af volume=3dB ' + targetFile.path
+			}
+
 			def sout = new StringBuffer()
 			def serr = new StringBuffer()
 			def process = pmdCommand.execute()
