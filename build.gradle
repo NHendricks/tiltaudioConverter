@@ -1,13 +1,13 @@
-import java.nio.file.Files
 buildscript {
   repositories {
 	mavenCentral()
   }
   dependencies {
-    classpath 'com.xlson.groovycsv:groovycsv:1.3'
+	classpath 'com.xlson.groovycsv:groovycsv:1.3'
 	classpath 'org.apache.commons:commons-io:1.3.2'
   }
 }
+import java.nio.file.Files
 import org.apache.commons.io.FileUtils
 import static com.xlson.groovycsv.CsvParser.parseCsv
 import groovy.io.FileType
@@ -15,109 +15,115 @@ import groovy.io.FileType
 def outputDir = project.file('_output')
 
 task generateAltsound2Tiltaudio {
-  doLast {
-    FileUtils.cleanDirectory(outputDir)
-	def altSoundZip = new File('_input').listFiles().find{it.name.endsWith('.zip')}
-	def altZipTree = zipTree(altSoundZip)
-    for(line in parseCsv(new FileReader(altZipTree.matching { include '**/altsound.csv'}.singleFile), separator: ',')) {
-        // println "ID=$line.ID, Name=$line.NAME"
-		def type = 'undefined'
-		if (line.DUCK.trim() == '10') {
-		  type = 'jingle'
-		} else if (line.DUCK.trim() == '100') {
-		  type = 'music'
-		} else if (line.DUCK.trim() == '65') {
-		  type = 'voice'
-		} else if (line.DUCK.trim() == '80') {
-		  type = 'sfx'
-		} else {
-		  println 'unknown DUCK value for ' + line.NAME + ':' + line.DUCK
+	group = 'tiltaudioConverter'
+	description = 'generates ordered folder structure from altsound.zip'
+	doLast {
+		FileUtils.cleanDirectory(outputDir)
+		def altSoundZip = new File('_input').listFiles().find{it.name.endsWith('.zip')}
+		def altZipTree = zipTree(altSoundZip)
+		for(line in parseCsv(new FileReader(altZipTree.matching { include '**/altsound.csv'}.singleFile), separator: ',')) {
+			// println "ID=$line.ID, Name=$line.NAME"
+			def type = 'undefined'
+			if (line.DUCK.trim() == '10') {
+				type = 'jingle'
+			} else if (line.DUCK.trim() == '100') {
+				type = 'music'
+			} else if (line.DUCK.trim() == '65') {
+				type = 'voice'
+			} else if (line.DUCK.trim() == '80') {
+				type = 'sfx'
+			} else {
+				println 'unknown DUCK value for ' + line.NAME + ':' + line.DUCK
+			}
+			def hex = line.ID
+			def decimal = '' + Integer.parseInt(hex.substring(2), 16)
+			decimal = decimal.padLeft(10, '0')
+			println type + '=>' + decimal + "=" + line.NAME
+			def outDir = new File(outputDir, type + '/' + decimal + '-' + line.NAME)
+			outDir.mkdirs()
+			Files.copy(project.file(altZipTree.matching { include '**/' + line.FNAME}.singleFile).toPath(), new File(outDir, line.FNAME).toPath())
 		}
-		def hex = line.ID
-		def decimal = '' + Integer.parseInt(hex.substring(2), 16)
-		decimal = decimal.padLeft(10, '0')
-        println type + '=>' + decimal + "=" + line.NAME
-		def outDir = new File(outputDir, type + '/' + decimal + '-' + line.NAME)
-		outDir.mkdirs()
-		Files.copy(project.file(altZipTree.matching { include '**/' + line.FNAME}.singleFile).toPath(), new File(outDir, line.FNAME).toPath())
-    }
-  }
+	}
 }
 
 def pinSound2TiltaudioEntries = new LinkedHashMap<File, File>()
 task generatePinsound2Tiltaudio {
-  doLast {
-    def pinSoundZip = new File('_input_pinsound').listFiles().find{it.name.endsWith('.zip')}   
-	def altSoundZip = new File('_input').listFiles().find{it.name.endsWith('.zip')}
-	def pinSoundZipTree = zipTree(pinSoundZip)
- 	def altZipTree = zipTree(altSoundZip)
-    for(line in parseCsv(new FileReader(altZipTree.matching { include '**/altsound.csv'}.singleFile), separator: ',')) {
-      // println "ID=$line.ID, Name=$line.NAME"
-	  def type = 'undefined'
-	  if (line.DUCK.trim() == '10') {
-	    type = 'jingle'
-	  } else if (line.DUCK.trim() == '100') {
-	    type = 'music'
-	  } else if (line.DUCK.trim() == '65') {
-	    type = 'voice'
-	  } else if (line.DUCK.trim() == '80') {
-	    type = 'sfx'
-	  } else {
-	    println 'unknown DUCK value for ' + line.NAME + ':' + line.DUCK
-	  }
-	  def hex = line.ID
-	  def decimal = '' + Integer.parseInt(hex.substring(2), 16)
-	  decimal = decimal.padLeft(10, '0')
-      println type + '=>' + decimal + "=" + line.NAME
-	  def outDir = new File(outputDir, type + '/' + decimal + '-' + line.NAME)
-	  outDir.mkdirs()
-	  pinSoundZipTree.matching { include '**/*'}.each {wavFileFromPinSound ->
-	    if (wavFileFromPinSound.getParentFile().getName().endsWith('-' + line.NAME)) {
-		  pinSound2TiltaudioEntries.put(wavFileFromPinSound.getParentFile(), outDir)
+	group = 'tiltaudioConverter'
+	description = 'generates ordered folder structure from pinsound.zip using altsoud.zip'
+	doLast {
+		def pinSoundZip = new File('_input_pinsound').listFiles().find{it.name.endsWith('.zip')}   
+		def altSoundZip = new File('_input').listFiles().find{it.name.endsWith('.zip')}
+		def pinSoundZipTree = zipTree(pinSoundZip)
+		def altZipTree = zipTree(altSoundZip)
+		for(line in parseCsv(new FileReader(altZipTree.matching { include '**/altsound.csv'}.singleFile), separator: ',')) {
+			// println "ID=$line.ID, Name=$line.NAME"
+			def type = 'undefined'
+			if (line.DUCK.trim() == '10') {
+			type = 'jingle'
+			} else if (line.DUCK.trim() == '100') {
+			type = 'music'
+			} else if (line.DUCK.trim() == '65') {
+			type = 'voice'
+			} else if (line.DUCK.trim() == '80') {
+			type = 'sfx'
+			} else {
+			println 'unknown DUCK value for ' + line.NAME + ':' + line.DUCK
+			}
+			def hex = line.ID
+			def decimal = '' + Integer.parseInt(hex.substring(2), 16)
+			decimal = decimal.padLeft(10, '0')
+			println type + '=>' + decimal + "=" + line.NAME
+			def outDir = new File(outputDir, type + '/' + decimal + '-' + line.NAME)
+			outDir.mkdirs()
+			pinSoundZipTree.matching { include '**/*'}.each {wavFileFromPinSound ->
+			if (wavFileFromPinSound.getParentFile().getName().endsWith('-' + line.NAME)) {
+				pinSound2TiltaudioEntries.put(wavFileFromPinSound.getParentFile(), outDir)
+			}
+			}
+			pinSound2TiltaudioEntries.keySet().each { dirOfPinsOund ->
+			dirOfPinsOund.listFiles().each{fileInPinSoundDir -> 
+				def destFile = new File(pinSound2TiltaudioEntries.get(dirOfPinsOund), fileInPinSoundDir.name.replaceAll("\\s","_"))
+				if (!destFile.exists()) {
+				Files.copy(fileInPinSoundDir.toPath(), destFile.toPath())
+				}
+			} 
+			}
 		}
-	  }
-	  pinSound2TiltaudioEntries.keySet().each { dirOfPinsOund ->
-	    dirOfPinsOund.listFiles().each{fileInPinSoundDir -> 
-		  def destFile = new File(pinSound2TiltaudioEntries.get(dirOfPinsOund), fileInPinSoundDir.name.replaceAll("\\s","_"))
-		  if (!destFile.exists()) {
-		    Files.copy(fileInPinSoundDir.toPath(), destFile.toPath())
-		  }
-		} 
-	  }
-    }
-  }
+	}
 }
 
 task convert {
-  doLast {
-    // for windows currently, change it for linux easily if you want
-    def path2ffmeg = '_ffmpeg/bin/ffmpeg.exe'
-	if (!project.file(path2ffmeg).exists()) {
-	  throw new Exception('Please put ffmeg into ' + path2ffmeg)
-	}
-	boolean hadErrors = false
-    outputDir.eachFileRecurse (FileType.FILES) { file ->
-      if (file.name.endsWith('.ogg')) {
-	    def targetFile = new File(file.getParentFile(), file.name.substring(0,file.name.length()-4) + '.wav')
-        println 'converting ' + file.path + ' to ' + targetFile.path
-        def pmdCommand = '_ffmpeg/bin/ffmpeg.exe -i "' + file.path +'" -af volume=3dB "' + targetFile.path + '"'
-        def sout = new StringBuffer()
-        def serr = new StringBuffer()
-        def process = pmdCommand.execute()
-        process.consumeProcessOutput(sout, serr)
-        process.waitForProcessOutput()
-		def exitValue = process.exitValue()
-		if (exitValue == 0) {
-		  file.delete()
-		} else {
-		  hadErrors = true
-          System.out << '    ffmpeg error output =>' + serr.toString()
-		  println "There was a problem while converting ${file.path}. Please try yourself:${pmdCommand}"
+	group = 'tiltaudioConverter'
+	description = 'converts ogg files to wav files and normalizes the volume'
+	doLast {
+		// for windows currently, change it for linux easily if you want
+		def path2ffmeg = '_ffmpeg/bin/ffmpeg.exe'
+		if (!project.file(path2ffmeg).exists()) {
+			throw new Exception('Please put ffmeg into ' + path2ffmeg)
 		}
-	  }
-    }
-	if (hadErrors) {
-	  throw new Exception('Some files could not be converted. Try convert again and check output.')
-	}	
-  }
+		boolean hadErrors = false
+		outputDir.eachFileRecurse (FileType.FILES) { file ->
+			if (file.name.endsWith('.ogg')) {
+			def targetFile = new File(file.getParentFile(), file.name.substring(0,file.name.length()-4) + '.wav')
+			println 'converting ' + file.path + ' to ' + targetFile.path
+			def pmdCommand = '_ffmpeg/bin/ffmpeg.exe -i "' + file.path +'" -af volume=3dB "' + targetFile.path + '"'
+			def sout = new StringBuffer()
+			def serr = new StringBuffer()
+			def process = pmdCommand.execute()
+			process.consumeProcessOutput(sout, serr)
+			process.waitForProcessOutput()
+			def exitValue = process.exitValue()
+			if (exitValue == 0) {
+				file.delete()
+			} else {
+				hadErrors = true
+				System.out << '    ffmpeg error output =>' + serr.toString()
+				println "There was a problem while converting ${file.path}. Please try yourself:${pmdCommand}"
+			}
+			}
+		}
+		if (hadErrors) {
+			throw new Exception('Some files could not be converted. Try convert again and check output.')
+		}	
+	}
 }
