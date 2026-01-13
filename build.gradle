@@ -54,6 +54,8 @@ task generatePinsound2Tiltaudio {
 	doLast {
 		def pinSoundZip = new File('_input_pinsound').listFiles().find{it.name.endsWith('.zip')}   
 		def altSoundZip = new File('_input').listFiles().find{it.name.endsWith('.zip')}
+		println 'Processing pinsound zip ' + pinSoundZip.getAbsolutePath();
+		println 'Processing altsound zip ' + altSoundZip.getAbsolutePath();
 		def pinSoundZipTree = zipTree(pinSoundZip)
 		def altZipTree = zipTree(altSoundZip)
 		for(line in parseCsv(new FileReader(altZipTree.matching { include '**/altsound.csv'}.singleFile), separator: ',')) {
